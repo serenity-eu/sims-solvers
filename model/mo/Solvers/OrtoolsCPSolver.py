@@ -76,7 +76,7 @@ class OrtoolsCPSolver(Solver):
                 obj_multiplier = [int(x/gcd) for x in obj_multiplier]
             main_obj = self.model.solver_model.NewIntVar(sum(lb_list), sum(up_list), "main_obj")
             self.model.solver_model.Add(main_obj == sum(self.model.objectives[i] * obj_multiplier[i]
-                                  for i in range(len(self.model.objectives))))
+                                                        for i in range(len(self.model.objectives))))
             self.current_objective = main_obj
         else:
             self.current_objective = self.model.objectives[0]
@@ -84,7 +84,6 @@ class OrtoolsCPSolver(Solver):
     def build_objective_e_constraint_augmecon2(self, best_constrain_obj_list, nadir_constrain_obj_list, augmentation):
         if len(self.model.objectives) != 2:
             raise Exception("The augmecon2 is implemented for 2 objectives only.")
-        # todo add lb and up to the variables
         constraint_objectives = []
         if augmentation:
             delta = 1000
@@ -122,16 +121,35 @@ class OrtoolsCPSolver(Solver):
     def set_threads(self, threads):
         self.solver.parameters = sat_parameters_pb2.SatParameters(num_search_workers=threads)
 
-    def opt_one_objective_or_satisfy(self, optimize_not_satisfy=True):
+    def opt_one_objective_or_satisfy(self, optimize_not_satisfy=True, verbose=False, hint=None):
+        if verbose:
+            self.activate_complex_verbose()
+        hints = []
+        if hint is not None:
+            self.model.solver_model._CpModel__model.solution_hint.Clear()
+            # hint is a list where each element is a 2 element list, where the first element is the variable and the
+            # second element is the value
+            for hint_element in hint:
+                if type(hint_element[0]) is list:
+                    for i in range(len(hint_element[0])):
+                        self.model.solver_model.AddHint(hint_element[0][i], hint_element[1][i])
+                else:
+                    self.model.solver_model.AddHint(hint_element[0], hint_element[1])
         self.status = self.solver.Solve(self.model.solver_model)
+
         if self.status == cp_model.INFEASIBLE:
             print("infeasible")
         elif self.status == cp_model.UNKNOWN:
             print("ortools-sat solver timeout")
         else:
+            if verbose:
+                self.show_simple_solution_info()
             self.add_solution_values_to_model_solver_values()
 
-    def perform_lexicographic_optimization(self):
+    def perform_lexicographic_optimization(self, verbose=False):
+        self.set_single_objective(self.model.objectives[self.lexicographic_obj_order[0]])
+        if verbose:
+            self.activate_complex_verbose()
         current_timeout_time = self.solver.parameters.max_time_in_seconds
         timer_lex = Timer(current_timeout_time)
         if len(self.lexicographic_obj_order) == 0:
@@ -152,18 +170,22 @@ class OrtoolsCPSolver(Solver):
             timer_lex.resume()
             self.solver.Solve(self.model.solver_model)
             timer_lex.pause()
-            # todo check how this could be infeasible
             one_solution = self.get_solution_objective_values()
             lexico_constraints.append(self.add_constraints_eq(self.model.objectives[self.lexicographic_obj_order[i]],
                                                               one_solution[self.lexicographic_obj_order[i]]))
         for constraints in lexico_constraints:
-            self.remove_constraints(constraints)
+            self.remove_constraint(constraints)
+        if verbose:
+            self.show_simple_solution_info()
         self.add_solution_values_to_model_solver_values()
+
+    def deactivate_lexicographic_optimization(self):
+        self.lexicographic_obj_order = []
 
     def add_solution_values_to_model_solver_values(self):
         self.model.solver_values = []
         for values in self.model.solution_variables:
-            if type(values) == list:
+            if type(values) is list:
                 for value in values:
                     self.model.solver_values.append(self.solver.Value(value))
             else:
@@ -181,7 +203,7 @@ class OrtoolsCPSolver(Solver):
         new_constraint = self.model.solver_model.Add(constraint >= rhs)
         return new_constraint
 
-    def remove_constraints(self, constraint):
+    def remove_constraint(self, constraint):
         constraint.Proto().Clear()
 
     def set_minimization(self):
@@ -236,12 +258,43 @@ class OrtoolsCPSolver(Solver):
         pareto_constraints = self.model.solver_model.AddAtLeastOne(bool_vars)
         return pareto_constraints
 
+    def add_at_least_one_bool_different(self, bool_vars, bool_var_diff_values):
+        # Creating a list to hold the negation of the pattern conditions
+        pattern_conditions = []
+        for var, pattern_value in zip(bool_vars, bool_var_diff_values):
+            if pattern_value == 1:
+                # If the pattern value is 1, we want to add the condition that the variable is not True
+                pattern_conditions.append(var.Not())
+            else:
+                # If the pattern value is 0, we add the condition that the variable is not False (i.e., it is True)
+                pattern_conditions.append(var)
+        # Ensure that not all variables match the pattern to exclude
+        return self.model.solver_model.AddBoolOr(pattern_conditions)
+
+    def objs_smaller_equal_at_least_one_smaller(self, constraints_lhs, rhs, id_constraint=0):
+        or_constraints = [constraints_lhs[i] <= rhs[i] for i in range(len(rhs))]
+        bool_vars = [self.model.solver_model.NewBoolVar(f"bool_var_for_or_chain_constraints_{id_constraint}_{i}") for
+                     i in range(len(rhs))]
+        or_chain_constraints = []
+        for i in range(len(rhs)):
+            or_chain_constraints.append(self.model.solver_model.Add(or_constraints[i]).OnlyEnforceIf(bool_vars[i]))
+        or_chain_constraints.append(self.model.solver_model.AddAtLeastOne(bool_vars))
+        return or_chain_constraints
 
     def gcd(self, list_to_gcd):
         gcd = list_to_gcd[0]
         for i in range(1, len(list_to_gcd)):
             gcd = math.gcd(gcd, list_to_gcd[i])
         return gcd
+
+    def activate_complex_verbose(self):
+        self.solver.parameters.log_search_progress = True
+
+    def show_simple_solution_info(self):
+        print("=====Start of simple Solution Stats:======")
+        print(self.solver.SolutionInfo())
+        print(self.solver.ResponseStats())
+        print("=====End of simple Solution Stats:======")
 
 
 class LastOptimization(Enum):

@@ -18,13 +18,14 @@ class Gavanelli(FrontGeneratorStrategy):
             solution_sec = self.get_solver_solution_for_timeout(optimize_not_satisfy=self.optimize)
             if self.solver.status_infeasible():
                 whole_front_found = True
+                formatted_solution = None
+                self.solver.update_statistics(solution_sec)
             else:
                 formatted_solution = self.process_feasible_solution(solution_sec)
                 one_solution = formatted_solution["objs"]
-                self.solver.add_or_all_objectives_constraint(one_solution, id_or_constraint,
-                                                             self.solver.model.is_a_minimization_model())
+                self.solver.add_or_all_objectives_constraint(one_solution, id_or_constraint)
                 id_or_constraint += 1
-                yield formatted_solution
+            yield formatted_solution
 
     def configure_optimization(self):
         self.solver.set_single_objective(self.solver.model.objectives[0])

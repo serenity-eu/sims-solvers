@@ -1,6 +1,4 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import List, Any
 
 
 class Solver(ABC):
@@ -37,22 +35,25 @@ class Solver(ABC):
         statistics["minizinc_time_fzn_sec"] = 0
         statistics["solutions_time_list"] = []
 
-    def solve(self, optimize_not_satisfy=True):
+    def solve(self, optimize_not_satisfy=True, verbose=False):
         if len(self.lexicographic_obj_order) == 0:
-            self.opt_one_objective_or_satisfy(optimize_not_satisfy=optimize_not_satisfy)
+            self.opt_one_objective_or_satisfy(optimize_not_satisfy=optimize_not_satisfy, verbose=verbose)
         else:
-            self.perform_lexicographic_optimization()
+            self.perform_lexicographic_optimization(verbose=verbose)
 
     @abstractmethod
-    def opt_one_objective_or_satisfy(self, optimize_not_satisfy=True):
+    def opt_one_objective_or_satisfy(self, optimize_not_satisfy=True, verbose=False):
         pass
 
     def set_lexicographic_optimization(self, objectives_list_order):
         self.lexicographic_obj_order = objectives_list_order
-        self.set_single_objective(self.model.objectives[objectives_list_order[0]])
 
     @abstractmethod
-    def perform_lexicographic_optimization(self):
+    def perform_lexicographic_optimization(self, verbose=False):
+        pass
+
+    @abstractmethod
+    def deactivate_lexicographic_optimization(self):
         pass
 
     def set_optimization_sense(self, sense):
@@ -72,7 +73,7 @@ class Solver(ABC):
         pass
 
     @abstractmethod
-    def remove_constraints(self, constraint):
+    def remove_constraint(self, constraint):
         pass
 
     @abstractmethod
@@ -142,6 +143,10 @@ class Solver(ABC):
 
     @abstractmethod
     def add_or_all_objectives_constraint(self, rhs, id_constraint=0):
+        pass
+
+    @abstractmethod
+    def objs_smaller_equal_at_least_one_smaller(self, constraints_lhs, rhs, id_constraint=0):
         pass
 
     @abstractmethod

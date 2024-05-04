@@ -69,6 +69,7 @@ def main():
     init_top_level_statistics(statistics)
     model = build_model(instance, config)
     solver, pareto_front = build_solver(model, instance, config, statistics)
+    save_results = True
     try:
         statistics["exhaustive"] = False
         statistics["incomplete_timeout_solution_added_to_front"] = False
@@ -87,13 +88,17 @@ def main():
                   "the pareto front")
             set_right_time_after_timeout(statistics, config.solver_timeout_sec)
     except Exception as e:
-        print("Execption raised: " + str(e))
+        print("Error Execption raised: " + str(e))
         logging.error(traceback.format_exc())
-    statistics["hypervolume"] = pareto_front.hypervolume()
-    pareto_solutions_time_list = [statistics["solutions_time_list"][x] for x in pareto_front.front]
-    statistics["pareto_solutions_time_list"] = pareto_solutions_time_list
-    print("end of solving statistics: " + str(statistics))
-    write_statistics(config, statistics)
+        save_results = False
+    if save_results:
+        statistics["all_solutions"] = statistics["all_solutions"][:-1]
+        statistics["all_solutions"] += "}"
+        statistics["hypervolume"] = pareto_front.hypervolume()
+        pareto_solutions_time_list = [statistics["solutions_time_list"][x] for x in pareto_front.front]
+        statistics["pareto_solutions_time_list"] = pareto_solutions_time_list
+        print("end of solving statistics: " + str(statistics))
+        write_statistics(config, statistics)
 
 
 def set_right_time_after_timeout(statistics, config_timeout_sec):

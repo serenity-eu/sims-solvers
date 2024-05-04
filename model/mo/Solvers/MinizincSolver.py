@@ -30,14 +30,13 @@ class MinizincSolver(Solver):
         self.local_constraints = ""
         super().__init__(model, statistics, threads, free_search)
 
-
     def set_solver(self):
         return None
 
     def set_threads(self, threads):
         self.threads = threads
 
-    def opt_one_objective_or_satisfy(self, optimize_not_satisfy=True):
+    def opt_one_objective_or_satisfy(self, optimize_not_satisfy=True, verbose=False):
         with self.instance.branch() as child:
             child.add_string(self.local_constraints)
             while True:
@@ -59,8 +58,12 @@ class MinizincSolver(Solver):
         elif self.solver_solution.status == Status.ERROR:
             raise Exception("CP solver error\n")
 
-    def perform_lexicographic_optimization(self):
-        print("Performing lexicographic optimization is not implemnted yet for GurobiSolver.")
+    def perform_lexicographic_optimization(self, verbose=False):
+        print("Performing lexicographic optimization is not implemented yet for MinizincSolver.")
+        raise NotImplementedError()
+
+    def deactivate_lexicographic_optimization(self):
+        print("Deactivating lexicographic optimization is not implemented yet for MinizincSolver.")
         raise NotImplementedError()
 
     def add_constraints_leq(self, constraint, rhs):
@@ -69,7 +72,7 @@ class MinizincSolver(Solver):
     def add_constraints_geq(self, constraint, rhs):
         raise NotImplementedError()
 
-    def remove_constraints(self, constraint):
+    def remove_constraint(self, constraint):
         raise NotImplementedError()
 
     def set_minimization(self):
@@ -79,7 +82,7 @@ class MinizincSolver(Solver):
         raise NotImplementedError()
 
     def set_time_limit(self, timeout):
-        self.timeout = timedelta(seconds = timeout)
+        self.timeout = timedelta(seconds=timeout)
 
     def set_single_objective(self, objective_expression):
         raise NotImplementedError()
@@ -122,6 +125,9 @@ class MinizincSolver(Solver):
                 cons.append(f"objs[{i + 1}] > {obj_value}")
         all_objective_or_cons = " \\/ ".join(cons)
         self.add_local_constraint(all_objective_or_cons)
+
+    def objs_smaller_equal_at_least_one_smaller(self, constraints_lhs, rhs, id_constraint=0):
+        raise NotImplementedError()
 
     def get_nodes_solution(self, solution):
         nodes = 0
