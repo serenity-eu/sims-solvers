@@ -33,9 +33,9 @@ class CoverageGridPoint(FrontGeneratorStrategy):
         previous_solutions = set()
         previous_solution_information = []
         for solutions in self.front_solutions:
-            solution_values = solutions['solution_values']
-            str_solution_values = Saugmecon.convert_solution_value_to_str(solution_values)
-            previous_solutions.add(str_solution_values)
+            objs_solution_values = solutions['objs']
+            str_objs_solution_values = Saugmecon.convert_solution_value_to_str(objs_solution_values)
+            previous_solutions.add(str_objs_solution_values)
         min_interval = min(self.nadir_objectives_values[1], self.best_objective_values[1])
         max_interval = max(self.nadir_objectives_values[1], self.best_objective_values[1])
         ef_interval = IntervalManager(min_interval+1, max_interval-1)
@@ -69,22 +69,34 @@ class CoverageGridPoint(FrontGeneratorStrategy):
                                                     min_sense=False)
                 one_solution = []
             else:
-                solution_values = self.solver.model.get_solution_values()
-                str_solution_values = Saugmecon.convert_solution_value_to_str(solution_values)
-                if str_solution_values in previous_solutions:
+                objectives_solution_values = self.solver.get_solution_objective_values()
+                str_objectives_solution_values = Saugmecon.convert_solution_value_to_str(objectives_solution_values)
+                if str_objectives_solution_values in previous_solutions:
                     one_solution = self.solver.get_solution_objective_values()
                 else:
                     # update previous_solutions
-                    previous_solutions.add(str_solution_values)
+                    previous_solutions.add(str_objectives_solution_values)
                     formatted_solution = self.process_feasible_solution(solution_sec)
                     one_solution = formatted_solution["objs"]
                     Saugmecon.save_solution_information(ef_array, one_solution, previous_solution_information,
                                                         min_sense=False)
-                    # the line below is for testing purposes, uncomment when necessary
-                    # self.solver.model.assert_solution(one_solution, formatted_solution["solution_values"])
+
                     if self.is_a_minimization_model_originally:
                         formatted_solution.solution.objs = [-1 * i for i in formatted_solution.solution.objs]
                     yield formatted_solution
+                    # todo comment below the line below is for testing purposes, uncomment when necessary
+                    try:
+                        self.solver.model.assert_solution([abs(obj) for obj in one_solution], formatted_solution["solution_values"])
+                    except Exception as e:
+                        print(e)
+                        self.solver.model.print_solution_values_model_values()
+                        calculated_cost = self.solver.model.calculate_cost(formatted_solution["solution_values"])
+                        if calculated_cost != abs(one_solution[0]):
+                            print(f"Cost error. Expected: {one_solution[0]}, calculated: {calculated_cost}")
+
+                        calculated_cloud_uncovered = self.solver.model.calculate_cloud_uncovered(formatted_solution["solution_values"])
+                        if calculated_cloud_uncovered != abs(one_solution[1]):
+                            print(f"Cloud covered error. Expected: {one_solution[1]}, calculated: {calculated_cloud_uncovered}")
         for i in range(len(self.constraint_objectives)):
             self.adjust_parameter_ef_array(gamma, i, ef_array, one_solution, ef_interval)
 
@@ -143,7 +155,7 @@ class CoverageGridPoint(FrontGeneratorStrategy):
             raise ValueError("This implementation only works for 2 objectives.")
 
     def always_add_new_solutions_to_front(self):
-        return True
+        return False
 
 
 class IntervalManager:

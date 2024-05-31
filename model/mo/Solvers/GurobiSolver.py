@@ -89,7 +89,7 @@ class GurobiSolver(Solver):
             raise Exception("The augmecon2 is implemented for 2 objectives only.")
         constraint_objectives = []
         if augmentation:
-            delta = 0.001  # delta should be between 0.001 and 0.000001
+            delta = 0.0001  # delta should be between 0.001 and 0.000001
             max_s2 = abs(best_constrain_obj_list[1] - nadir_constrain_obj_list[1])
             s2 = self.model.solver_model.addVar(vtype=gp.GRB.INTEGER, lb=0, ub=max_s2, name="s2")
             # main objective

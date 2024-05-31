@@ -144,6 +144,12 @@ class SatelliteImageMosaicSelectionGurobiModel(GurobiModel, SatelliteImageMosaic
                 selected_images.append(image)
         return selected_images
 
+    # for testing only
+    def print_solution_values_model_values(self):
+        for image in self.select_image.keys():
+            if abs(self.select_image[image].x) > 1e-6:
+                print(f"Image {image} is selected with a value of {self.select_image[image].x}")
+
     def add_necessary_solver_configuration(self):
         print("Extra solver configuration needed")
         self.solver_model.Params.IntegralityFocus = 1
