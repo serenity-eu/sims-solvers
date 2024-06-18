@@ -168,8 +168,10 @@ class OrtoolsCPSolver(Solver):
             if timeout <= 0:
                 raise TimeoutError()
             timer_lex.resume()
-            self.solver.Solve(self.model.solver_model)
+            self.status = self.solver.Solve(self.model.solver_model)
             timer_lex.pause()
+            if self.status == cp_model.UNKNOWN:
+                raise TimeoutError
             one_solution = self.get_solution_objective_values()
             lexico_constraints.append(self.add_constraints_eq(self.model.objectives[self.lexicographic_obj_order[i]],
                                                               one_solution[self.lexicographic_obj_order[i]]))
@@ -207,11 +209,13 @@ class OrtoolsCPSolver(Solver):
         constraint.Proto().Clear()
 
     def set_minimization(self):
-        self.model.solver_model.Minimize(self.current_objective)
+        if self.current_objective is not None:
+            self.model.solver_model.Minimize(self.current_objective)
         self.last_optimization = LastOptimization.MINIMIZATION
 
     def set_maximization(self):
-        self.model.solver_model.Maximize(self.current_objective)
+        if self.current_objective is not None:
+            self.model.solver_model.Maximize(self.current_objective)
         self.last_optimization = LastOptimization.MAXIMIZATION
 
     def set_time_limit(self, timeout):
