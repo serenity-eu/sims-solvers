@@ -9,6 +9,9 @@ class Gavanelli(FrontGeneratorStrategy):
     def always_add_new_solutions_to_front(self):
         return True
 
+    def set_multiply_solution_by_minus_one(self):
+        return False
+
     def solve(self):
         whole_front_found = False
         id_or_constraint = 0

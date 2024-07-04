@@ -17,6 +17,11 @@ class CoverageGridPoint(FrontGeneratorStrategy):
         self.constraint_objectives = [0] * (len(self.solver.model.objectives) - 1)
         self.is_a_minimization_model_originally = False
 
+    def set_multiply_solution_by_minus_one(self):
+        if self.model_optimization_sense == "min":
+            return True
+        return False
+
     def solve(self):
         # get the best and worst values for each objective, in the case of 2 objectives, it will return the extreme
         # points of the Pareto front

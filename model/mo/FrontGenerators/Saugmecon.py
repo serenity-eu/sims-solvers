@@ -9,6 +9,9 @@ class Saugmecon(FrontGeneratorStrategy):
         super().__init__(solver, timer)
         self.constraint_objectives = [0] * (len(self.solver.model.objectives) - 1)  # all objectives except objective[0]
 
+    def set_multiply_solution_by_minus_one(self):
+        return False
+
     def always_add_new_solutions_to_front(self):
         if self.not_evaluate_always_add_new_solutions_to_front:
             return False

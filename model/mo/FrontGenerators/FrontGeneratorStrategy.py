@@ -19,6 +19,11 @@ class FrontGeneratorStrategy(ABC):
         else:
             self.model_optimization_sense = "max"
             self.step = 1
+        self.multiply_solution_by_minus_one = self.set_multiply_solution_by_minus_one()
+
+    @abstractmethod
+    def set_multiply_solution_by_minus_one(self):
+        pass
 
     @abstractmethod
     def solve(self):
@@ -47,6 +52,9 @@ class FrontGeneratorStrategy(ABC):
     def deal_with_timeout(self, solution_sec):
         try:
             self.solution_incomplete_due_timeout = self.process_feasible_solution(solution_sec)
+            if self.multiply_solution_by_minus_one:
+                self.solution_incomplete_due_timeout.solution.objs = [-1 * i for i in
+                                                                      self.solution_incomplete_due_timeout.solution.objs]
         except Exception as e:
             print("Couldn't get the last incomplete solution")
         print("Solver timed out...")
