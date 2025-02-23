@@ -1,19 +1,11 @@
 *~
 .DS_Store
-mine_the_belt/.idea
-mosaicking.ipynb
 .idea
-20images_data.csv
-20images_data.geojson
-search_parameters.json
-coverage.png
-aois
-Readme by Manuel.rtf
-my_tests
 results/*test
 results/*backup
 *.sh
 __pycache__/
 *.pyc
 venv/
-AnalysisResult/**/*.pdf
+.venv/
+.pdm-build/
