@@ -1,12 +1,8 @@
 import os
-import sys
 
 from minizinc import Solver, Instance
 from minizinc import Model as ModelMiniZinc
 from dataclasses import fields
-
-utils_path = os.path.abspath('./')
-sys.path.append(utils_path)
 from ProjectDataClasses import DataSetFieldsForDiscreteApproaches
 
 
