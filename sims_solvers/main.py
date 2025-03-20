@@ -10,6 +10,7 @@ from minizinc import Instance, Model, Solver
 
 from sims_solvers import constants
 from sims_solvers.Config import Config
+from sims_solvers.FrontGenerators.AnejaNair import AnejaNair
 from sims_solvers.FrontGenerators.CoverageGridPoint import CoverageGridPoint
 from sims_solvers.FrontGenerators.Gavanelli import Gavanelli
 from sims_solvers.FrontGenerators.Saugmecon import Saugmecon
@@ -311,6 +312,8 @@ def set_front_strategy(config, solver):
         return Gavanelli(solver, Timer(config.solver_timeout_sec), optimize=True)
     elif config.front_strategy == "augmecon-coverage":
         return CoverageGridPoint(solver, Timer(config.solver_timeout_sec))
+    elif config.front_strategy == "aneja-nair":
+        return AnejaNair(solver, Timer(config.solver_timeout_sec))
     else:
         return Saugmecon(solver, Timer(config.solver_timeout_sec))
 
