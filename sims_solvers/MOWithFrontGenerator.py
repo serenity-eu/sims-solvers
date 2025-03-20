@@ -1,3 +1,5 @@
+from sims_solvers.FrontGenerators.FrontGeneratorStrategy import FrontGeneratorStrategy
+from sims_solvers.Instances.InstanceGeneric import InstanceGeneric
 from sims_solvers.ParetoFront import ParetoFront
 
 
@@ -10,7 +12,7 @@ class MOWithFrontGenerator:
         front_generator: A front generator strategy with a solver supporting `solve()`.
         verbose (Bool): If `True`, the solver prints the Pareto front, new objectives and statistics at each iteration."""
 
-    def __init__(self, instance, statistics, front_generator, verbose=True):
+    def __init__(self, instance: InstanceGeneric, statistics: dict, front_generator: FrontGeneratorStrategy, verbose: bool = True):
         self.instance = instance
         self.front_generator_strategy = front_generator
         self.pareto_front = ParetoFront()
@@ -33,7 +35,7 @@ class MOWithFrontGenerator:
                 print("Intermediate unfeasible solution")
             yield x
 
-    def add_solution_pareto_front(self, solution, added_to_front_verification=True):
+    def add_solution_pareto_front(self, solution, added_to_front_verification=True) -> bool:
         added_to_front = self.pareto_front.join(solution)
         error = False
         error_msg = (f"Error!! solution {solution} is a new solution which is dominated by some of the previous. "

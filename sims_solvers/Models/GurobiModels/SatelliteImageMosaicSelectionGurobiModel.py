@@ -1,5 +1,4 @@
 import gurobipy as gp
-from gurobipy import max_
 
 from sims_solvers.Models.GurobiModels.GurobiModel import GurobiModel
 from sims_solvers.Models.SatelliteImageMosaicSelectionGeneralModel import (

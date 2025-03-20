@@ -1,15 +1,17 @@
 from abc import ABC, abstractmethod
 
+from sims_solvers.Models.GenericModel import GenericModel
+
 
 class Solver(ABC):
-    def __init__(self, model, statistics, threads, free_search=True):
+    def __init__(self, model: GenericModel, statistics: dict, threads: int, free_search: bool = True):
         self.model = model
         self.assert_right_solver(model)
         self.solver = self.set_solver()
         self.free_search = free_search
         self.statistics = statistics
         self.set_threads(threads)
-        self.lexicographic_obj_order = []
+        self.lexicographic_obj_order: list[int] = []
         Solver.init_statistics(statistics)
 
     @abstractmethod
@@ -45,7 +47,7 @@ class Solver(ABC):
     def opt_one_objective_or_satisfy(self, optimize_not_satisfy=True, verbose=False):
         pass
 
-    def set_lexicographic_optimization(self, objectives_list_order):
+    def set_lexicographic_optimization(self, objectives_list_order: list[int]):
         self.lexicographic_obj_order = objectives_list_order
 
     @abstractmethod

@@ -2,10 +2,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Any
 
+from sims_solvers.Solvers.Solver import Solver
+from sims_solvers.Timer import Timer
+
 
 class FrontGeneratorStrategy(ABC):
 
-    def __init__(self, solver, timer):
+    def __init__(self, solver: Solver, timer: Timer):
         self.solver = solver
         self.timer = timer
         self.best_objective_values = None
@@ -60,14 +63,14 @@ class FrontGeneratorStrategy(ABC):
         print("Solver timed out...")
         raise TimeoutError()
 
-    def process_feasible_solution(self, solution_sec):
+    def process_feasible_solution(self, solution_sec) -> "MinizincResultFormat":
         # update statistics
         self.solver.update_statistics(solution_sec)
         # record the solution
         formatted_solution = self.prepare_solution()
         return formatted_solution
 
-    def prepare_solution(self, one_solution=None, solution_values=None):
+    def prepare_solution(self, one_solution=None, solution_values=None) -> "MinizincResultFormat":
         if one_solution is None:
             one_solution = self.solver.get_solution_objective_values()
         if solution_values is None:

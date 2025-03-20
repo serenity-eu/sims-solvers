@@ -13,10 +13,12 @@ from sims_solvers.Config import Config
 from sims_solvers.FrontGenerators.CoverageGridPoint import CoverageGridPoint
 from sims_solvers.FrontGenerators.Gavanelli import Gavanelli
 from sims_solvers.FrontGenerators.Saugmecon import Saugmecon
+from sims_solvers.Instances.InstanceGeneric import InstanceGeneric
 from sims_solvers.Instances.InstanceMinizinc import InstanceMinizinc
 from sims_solvers.Instances.InstanceMIPMatrix import InstanceMIPMatrix
 from sims_solvers.Instances.InstanceSIMS import InstanceSIMS
 from sims_solvers.MOCP import MOCP
+from sims_solvers.Models.GenericModel import GenericModel
 from sims_solvers.Models.GurobiModels.MultiobjectiveKnapsackGurobiModel import (
     MultiobjectiveKnapsackGurobiModel,
 )
@@ -31,13 +33,14 @@ from sims_solvers.Models.OrtoolsCPModels.SatelliteImageMosaicSelectionOrtoolsCPM
     SatelliteImageMosaicSelectionOrtoolsCPModel,
 )
 from sims_solvers.MOWithFrontGenerator import MOWithFrontGenerator
+from sims_solvers.ParetoFront import ParetoFront
 from sims_solvers.Solvers.GurobiSolver import GurobiSolver
 from sims_solvers.Solvers.MinizincSolver import MinizincSolver
 from sims_solvers.Solvers.OrtoolsCPSolver import OrtoolsCPSolver
 from sims_solvers.Timer import Timer
 
 
-def init_top_level_statistics(statistics):
+def init_top_level_statistics(statistics: dict):
     statistics["exhaustive"] = False
     statistics["hypervolume"] = 0
     statistics["datetime"] = datetime.now()
@@ -57,7 +60,7 @@ def init_solution_details_statistics(statistics):
 
 
 def main():
-    config = Config()
+    config = Config.from_args()
     # check_already_computed(config)
     instance = build_instance(config)
     print("Start computing: " + config.uid())
@@ -106,7 +109,7 @@ def set_right_time_after_timeout(statistics, config_timeout_sec):
     statistics["time_solver_sec"] = config_timeout_sec
 
 
-def build_instance(config):
+def build_instance(config: Config) -> InstanceGeneric:
     instance = None
     if use_minizinc_data(config):
         instance = build_instance_minizinc_data(config)
@@ -117,11 +120,11 @@ def build_instance(config):
     return instance
 
 
-def use_minizinc_data(config) -> bool:
+def use_minizinc_data(config: Config) -> bool:
     return config.minizinc_data
 
 
-def build_instance_minizinc_data(config):
+def build_instance_minizinc_data(config: Config) -> InstanceGeneric:
     # here we build the instance, it could from minizinc or from other format
     model = Model(config.input_mzn)
     model.add_file(config.input_dzn, parse_data=True)
@@ -141,7 +144,7 @@ def build_instance_minizinc_data(config):
     return instance
 
 
-def build_instance_text_data(config):
+def build_instance_text_data(config: Config) -> InstanceMIPMatrix:
     objective_matrix = []
     constraints_matrix = []
     rhs_constraints_vector = []
@@ -239,14 +242,14 @@ def check_already_computed(config):
                     sys.exit(0)
 
 
-def build_solver(model, instance, config, statistics):
+def build_solver(model: GenericModel, instance: InstanceGeneric, config: Config, statistics: dict) -> tuple[MOWithFrontGenerator, ParetoFront]:
     osolve = build_osolver(model, instance, config, statistics)
     front_generator_strategy = set_front_strategy(config, osolve)
     osolve_mo = build_MO(instance, statistics, front_generator_strategy, osolve)
     return osolve_mo, osolve_mo.pareto_front
 
 
-def build_model(instance, config):
+def build_model(instance: InstanceGeneric, config: Config) -> GenericModel:
     if instance.is_minizinc:
         return MinizincPseudoModel()
     problem = instance.problem_name
@@ -274,7 +277,7 @@ def get_model_by_problem_and_solver_name_(problem_name, solver_name, instance):
             return MultiobjectiveKnapsackOrtoolsCPModel(instance)
 
 
-def build_osolver(model, instance, config, statistics):
+def build_osolver(model: GenericModel, instance: InstanceGeneric, config: Config, statistics: dict) -> Solver:
     free_search = config.solver_search_strategy == "free_search"
     if instance.is_minizinc:
         # todo maybe change the name to indicate that this is using MiniZinc
