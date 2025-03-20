@@ -98,6 +98,10 @@ class GurobiSolver(Solver):
     def set_single_objective(self, objective_expression):
         self.model.solver_model.setObjective(objective_expression)
 
+    def set_weighted_sum_objective(self, weights):
+        weighted_sum = sum(w * o for w, o in zip(weights, self.model.objectives))
+        self.set_single_objective(weighted_sum)
+
     def add_constraints_eq(self, constraint, rhs):
         new_constraint = self.model.solver_model.addConstr(constraint == rhs)
         return new_constraint
