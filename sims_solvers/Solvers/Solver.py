@@ -114,6 +114,10 @@ class Solver(ABC):
     def get_solution_objective_values(self):
         pass
 
+    @abstractmethod
+    def set_weighted_sum_objective(self, weights):
+        pass
+
     # status---------------------------------------------------
     @abstractmethod
     def get_status(self):
