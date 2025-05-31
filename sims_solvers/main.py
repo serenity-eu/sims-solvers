@@ -10,6 +10,7 @@ from minizinc import Instance, Model, Solver
 
 from sims_solvers import constants
 from sims_solvers.Config import Config
+from sims_solvers.FrontGenerators.AnejaNair import AnejaNair
 from sims_solvers.FrontGenerators.CoverageGridPoint import CoverageGridPoint
 from sims_solvers.FrontGenerators.Gavanelli import Gavanelli
 from sims_solvers.FrontGenerators.Saugmecon import Saugmecon
@@ -299,7 +300,7 @@ def build_osolver(model: GenericModel, instance: InstanceGeneric, config: Config
         elif config.solver_name == "ortools-py":
             return OrtoolsCPSolver(model, statistics, config.threads, free_search)
         else:
-            return GurobiSolver(model, statistics, config.threads, free_search)
+            raise ValueError("Unknown solver name: " + config.solver_name)
 
 
 def set_front_strategy(config, solver):
@@ -311,8 +312,10 @@ def set_front_strategy(config, solver):
         return Gavanelli(solver, Timer(config.solver_timeout_sec), optimize=True)
     elif config.front_strategy == "augmecon-coverage":
         return CoverageGridPoint(solver, Timer(config.solver_timeout_sec))
+    elif config.front_strategy == "aneja-nair":
+        return AnejaNair(solver, Timer(config.solver_timeout_sec))
     else:
-        return Saugmecon(solver, Timer(config.solver_timeout_sec))
+        raise ValueError("Unknown front strategy: " + config.front_strategy)
 
 
 def build_MO(instance, statistics, front_generator, osolve):

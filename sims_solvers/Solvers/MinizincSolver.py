@@ -91,6 +91,9 @@ class MinizincSolver(Solver):
     def get_solution_objective_values(self):
         return self.solver_solution.solution.objs
 
+    def set_weighted_sum_objective(self, weights):
+        raise NotImplementedError("set_weighted_sum_objective not implemented for MinizincSolver.")
+
     def get_status(self):
         return self.solver_solution.status.name
 

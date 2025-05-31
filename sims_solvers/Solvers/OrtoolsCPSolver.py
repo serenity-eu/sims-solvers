@@ -222,6 +222,9 @@ class OrtoolsCPSolver(Solver):
         one_solution = [int(round(x, 0)) for x in one_solution]
         return one_solution
 
+    def set_weighted_sum_objective(self, weights):
+        raise NotImplementedError("set_weighted_sum_objective not implemented for OrtoolsCPSolver.")
+
     def get_status(self):
         return self.solver.StatusName(self.status)
 
