@@ -43,7 +43,7 @@ def solve_milp(config: Config):
             )
             set_right_time_after_timeout(statistics, config.solver_timeout_sec)
     except Exception as e:
-        print("Error Execption raised: " + str(e))
+        print("Error Exception raised: " + str(e))
         logging.error(traceback.format_exc())
         save_results = False
     if save_results:

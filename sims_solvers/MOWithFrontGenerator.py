@@ -28,7 +28,11 @@ class MOWithFrontGenerator:
 
     def solve(self):
         for x in self.front_generator_strategy.solve():
-            self.add_solution_pareto_front(x)
+            # TODO(hlvlad): this should not raise
+            try:
+                self.add_solution_pareto_front(x)
+            except Exception as e:
+                break
             if x is not None:
                 self.print_statistics_of_recent_solution(x)
             else:
