@@ -1,6 +1,6 @@
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "sims-solvers"
@@ -25,5 +25,5 @@ dependencies = [
 [project.scripts]
 sims_solvers = "sims_solvers.main:main"
 
-[tool.pdm.build]
-source-includes = ["sims_solvers/"]
+[tool.hatch.build.targets.wheel]
+packages = ["sims_solvers"]
